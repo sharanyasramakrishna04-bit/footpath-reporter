@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const { DatabaseSync } = require("node:sqlite");
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(express.json());
 
 // ---------- Admin password (from the .env file) ----------
@@ -107,7 +108,10 @@ app.post("/api/logout", function (req, res) {
   if (token) {
     sessions.delete(token);
   }
-  res.setHeader("Set-Cookie", "session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0");
+  res.setHeader(
+      "Set-Cookie",
+      "session=" + token + "; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800" + (req.secure ? "; Secure" : "")
+    );
   res.json({ message: "Logged out" });
 });
 
