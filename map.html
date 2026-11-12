@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Footpath Reports Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; }
+    #top {
+      background: #1a5c3a;
+      color: white;
+      padding: 12px 15px;
+    }
+    #top a { color: white; }
+    #map { height: calc(100vh - 48px); }
+    .popup img { width: 200px; max-width: 100%; border-radius: 6px; }
+  </style>
+</head>
+<body>
+
+  <div id="top">
+    <strong>Reported footpath problems</strong> &nbsp;|&nbsp;
+    <a href="/">Report a new one</a>
+  </div>
+  <div id="map"></div>
+
+  <script>
+    // Make the map, centred on Bengaluru
+    const map = L.map("map").setView([12.9716, 77.5946], 12);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    // Build the little box that opens when a pin is clicked
+    function makePopup(report) {
+      const box = document.createElement("div");
+      box.className = "popup";
+
+      const img = document.createElement("img");
+      img.src = "/uploads/" + report.photo;
+      box.appendChild(img);
+
+      const status = document.createElement("p");
+      status.textContent = "Status: " + report.status;
+      status.style.fontWeight = "bold";
+      box.appendChild(status);
+
+      const notes = document.createElement("p");
+      notes.textContent = report.notes || "(no description)";
+      box.appendChild(notes);
+
+      const time = document.createElement("small");
+      time.textContent = "Reported: " + report.created_at;
+      box.appendChild(time);
+
+      return box;
+    }
+
+    // Get the reports from the server and add a pin for each
+    async function loadReports() {
+      const response = await fetch("/api/reports");
+      const reports = await response.json();
+
+      const points = [];
+      reports.forEach(function (report) {
+        const point = [report.latitude, report.longitude];
+        points.push(point);
+        L.marker(point).addTo(map).bindPopup(makePopup(report));
+      });
+
+      if (points.length > 0) {
+        map.fitBounds(points, { padding: [40, 40], maxZoom: 17 });
+      }
+    }
+
+    loadReports();
+  </script>
+
+</body>
+</html>

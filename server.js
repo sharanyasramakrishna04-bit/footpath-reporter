@@ -55,6 +55,10 @@ app.get("/", function (req, res) {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+app.get("/map", function (req, res) {
+  res.sendFile(path.join(__dirname, "map.html"));
+});
+
 app.use("/uploads", express.static("uploads"));
 
 // ---------- Receive a report ----------
