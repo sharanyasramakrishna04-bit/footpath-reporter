@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Footpath Reporter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 0 15px;
+      background: #f4f7f5;
+    }
+    h1 {
+      color: #1a5c3a;
+      font-size: 26px;
+    }
+    button {
+      background: #5c521a;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #14472d;
+    }
+    textarea {
+      width: 100%;
+      height: 90px;
+      padding: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+    }
+    #locationText {
+      font-weight: bold;
+      color: #1a5c3a;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Report a damaged or missing footpath</h1>
+  <p>Help make Bengaluru's streets safe to walk.</p>
+
+  <p>Take a photo of the footpath:</p>
+  <input type="file" accept="image/*" capture="environment">
+
+  <p>Describe the problem:</p>
+  <textarea placeholder="Example: Footpath is broken near the bus stop"></textarea>
+
+  <br><br>
+  <button id="locBtn">Get my location</button>
+  <button>Submit report</button>
+
+  <p id="locationText"></p>
+
+  <script>
+    document.getElementById("locBtn").addEventListener("click", function () {
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          document.getElementById("locationText").textContent =
+            "Latitude: " + pos.coords.latitude + " | Longitude: " + pos.coords.longitude;
+        },
+        function () {
+          alert("Please allow location access");
+        }
+      );
+    });
+  </script>
+
+</body>
+</html>
