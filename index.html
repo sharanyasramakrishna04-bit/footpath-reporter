@@ -16,7 +16,7 @@
       font-size: 26px;
     }
     button {
-      background: #5c521a;
+      background: #1a5c3a;
       color: white;
       border: none;
       padding: 12px 18px;
@@ -37,7 +37,7 @@
       border: 1px solid #bbb;
       border-radius: 8px;
     }
-    #locationText {
+    #locationText, #statusText {
       font-weight: bold;
       color: #1a5c3a;
     }
@@ -49,28 +49,70 @@
   <p>Help make Bengaluru's streets safe to walk.</p>
 
   <p>Take a photo of the footpath:</p>
-  <input type="file" accept="image/*" capture="environment">
+  <input type="file" id="photo" accept="image/*" capture="environment">
 
   <p>Describe the problem:</p>
-  <textarea placeholder="Example: Footpath is broken near the bus stop"></textarea>
+  <textarea id="notes" placeholder="Example: Footpath is broken near the bus stop"></textarea>
 
   <br><br>
   <button id="locBtn">Get my location</button>
-  <button>Submit report</button>
+  <button id="submitBtn">Submit report</button>
 
   <p id="locationText"></p>
+  <p id="statusText"></p>
 
   <script>
+    let latitude = null;
+    let longitude = null;
+
+    // Location button
     document.getElementById("locBtn").addEventListener("click", function () {
       navigator.geolocation.getCurrentPosition(
         function (pos) {
+          latitude = pos.coords.latitude;
+          longitude = pos.coords.longitude;
           document.getElementById("locationText").textContent =
-            "Latitude: " + pos.coords.latitude + " | Longitude: " + pos.coords.longitude;
+            "Latitude: " + latitude + " | Longitude: " + longitude;
         },
         function () {
           alert("Please allow location access");
         }
       );
+    });
+
+    // Submit button
+    document.getElementById("submitBtn").addEventListener("click", async function () {
+      const photo = document.getElementById("photo").files[0];
+      const notes = document.getElementById("notes").value;
+      const status = document.getElementById("statusText");
+
+      if (!photo) {
+        alert("Please take or choose a photo first");
+        return;
+      }
+      if (latitude === null) {
+        alert("Please click 'Get my location' first");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("photo", photo);
+      formData.append("notes", notes);
+      formData.append("latitude", latitude);
+      formData.append("longitude", longitude);
+
+      status.textContent = "Sending...";
+
+      try {
+        const response = await fetch("/report", {
+          method: "POST",
+          body: formData
+        });
+        const data = await response.json();
+        status.textContent = data.message;
+      } catch (error) {
+        status.textContent = "Something went wrong. Please try again.";
+      }
     });
   </script>
 
