@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - Footpath Reports</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 15px; background: #f4f7f5; }
+    h1 { color: #1a5c3a; }
+    button { background: #1a5c3a; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    input[type=password], select { padding: 10px; font-size: 16px; border: 1px solid #bbb; border-radius: 8px; }
+    .card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+    .card img { width: 100%; max-height: 260px; object-fit: cover; border-radius: 8px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+    .hidden { display: none; }
+    #message { font-weight: bold; color: #1a5c3a; }
+  </style>
+</head>
+<body>
+
+  <h1>Admin page</h1>
+  <p id="message"></p>
+
+  <div id="loginBox" class="hidden">
+    <p>Enter the admin password:</p>
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Log in</button>
+  </div>
+
+  <div id="adminBox" class="hidden">
+    <p><button id="logoutBtn">Log out</button> &nbsp; <a href="/map">View map</a></p>
+    <div id="list"></div>
+  </div>
+
+  <script>
+    const STATUSES = ["Reported", "Seen", "In progress", "Fixed"];
+    const message = document.getElementById("message");
+
+    function showScreen(loggedIn) {
+      document.getElementById("loginBox").classList.toggle("hidden", loggedIn);
+      document.getElementById("adminBox").classList.toggle("hidden", !loggedIn);
+      if (loggedIn) {
+        loadReports();
+      }
+    }
+
+    async function checkLogin() {
+      const response = await fetch("/api/me");
+      const data = await response.json();
+      showScreen(data.loggedIn);
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", async function () {
+      const password = document.getElementById("password").value;
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password })
+      });
+      const data = await response.json();
+      message.textContent = response.ok ? "" : data.message;
+      document.getElementById("password").value = "";
+      if (response.ok) {
+        showScreen(true);
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async function () {
+      await fetch("/api/logout", { method: "POST" });
+      showScreen(false);
+    });
+
+    function makeCard(report) {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const img = document.createElement("img");
+      img.src = "/uploads/" + report.photo;
+      card.appendChild(img);
+
+      const notes = document.createElement("p");
+      notes.textContent = report.notes || "(no description)";
+      card.appendChild(notes);
+
+      const info = document.createElement("small");
+      info.textContent = "Report #" + report.id + " | " + report.created_at +
+        " | " + report.latitude.toFixed(5) + ", " + report.longitude.toFixed(5);
+      card.appendChild(info);
+
+      const row = document.createElement("div");
+      row.className = "row";
+
+      const select = document.createElement("select");
+      STATUSES.forEach(function (s) {
+        const option = document.createElement("option");
+        option.value = s;
+        option.textContent = s;
+        if (s === report.status) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+      row.appendChild(select);
+
+      const saveBtn = document.createElement("button");
+      saveBtn.textContent = "Save status";
+      saveBtn.addEventListener("click", async function () {
+        const response = await fetch("/api/reports/" + report.id + "/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: select.value })
+        });
+        const data = await response.json();
+        message.textContent = data.message + " (report #" + report.id + ")";
+        if (response.status === 401) {
+          showScreen(false);
+        }
+      });
+      row.appendChild(saveBtn);
+
+      card.appendChild(row);
+      return card;
+    }
+
+    async function loadReports() {
+      const response = await fetch("/api/reports");
+      const reports = await response.json();
+      const list = document.getElementById("list");
+      list.textContent = "";
+      if (reports.length === 0) {
+        list.textContent = "No reports yet.";
+      }
+      reports.forEach(function (report) {
+        list.appendChild(makeCard(report));
+      });
+    }
+
+    checkLogin();
+  </script>
+
+</body>
+</html>
