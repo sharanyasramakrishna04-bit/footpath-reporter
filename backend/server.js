@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const { DatabaseSync } = require("node:sqlite");
 
 const app = express();
+const FRONTEND = path.join(__dirname, "..", "frontend");
 app.set("trust proxy", 1);
 app.use(express.json());
 
@@ -145,15 +146,15 @@ const upload = multer({
 
 // ---------- Pages ----------
 app.get("/", function (req, res) {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(FRONTEND, "index.html"));
 });
 
 app.get("/map", function (req, res) {
-  res.sendFile(path.join(__dirname, "map.html"));
+  res.sendFile(path.join(FRONTEND, "map.html"));
 });
 
 app.get("/admin", function (req, res) {
-  res.sendFile(path.join(__dirname, "admin.html"));
+  res.sendFile(path.join(FRONTEND, "admin.html"));
 });
 
 app.use("/uploads", express.static("uploads"));
