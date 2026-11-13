@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Footpath Reporter - Home</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f7f5; margin: 0; padding: 30px 15px; text-align: center; }
+    h1 { color: #1a5c3a; margin-bottom: 5px; }
+    .role { color: #555; margin-top: 0; }
+    .cards { max-width: 420px; margin: 30px auto; display: flex; flex-direction: column; gap: 15px; }
+    .card { display: block; background: white; border: 2px solid #1a5c3a; border-radius: 12px; padding: 22px 15px; text-decoration: none; color: #1a5c3a; font-size: 18px; font-weight: bold; }
+    .card small { display: block; margin-top: 6px; font-size: 14px; font-weight: normal; color: #555; }
+    .card:hover { background: #e8f3ec; }
+    .admin { border-color: #7a4b00; color: #7a4b00; }
+    .admin:hover { background: #fff4e0; }
+    button { background: #1a5c3a; color: white; border: none; padding: 12px 18px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    #adminCard { display: none; }
+  </style>
+</head>
+<body>
+  <h1 id="welcome">Loading...</h1>
+  <p class="role" id="roleText"></p>
+
+  <div class="cards">
+    <a class="card" href="/">Register complaint<small>Report a broken or blocked footpath</small></a>
+    <a class="card" href="/my-complaints">View my complaints<small>See the status of what you reported</small></a>
+    <a class="card admin" id="adminCard" href="/admin">Official panel<small>Review and update all reports</small></a>
+  </div>
+
+  <button id="logoutBtn">Log out</button>
+
+  <script>
+    async function start() {
+      const response = await fetch("/api/me");
+      const me = await response.json();
+
+      if (!me.loggedIn) {
+        window.location.href = "/login";
+        return;
+      }
+
+      document.getElementById("welcome").textContent = "Welcome, " + me.name + "!";
+      document.getElementById("roleText").textContent =
+        me.role === "admin"
+          ? "You are logged in as an Official (Admin)."
+          : "You are logged in as a Citizen.";
+
+      if (me.role === "admin") {
+        document.getElementById("adminCard").style.display = "block";
+      }
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", async function () {
+      await fetch("/api/logout", { method: "POST" });
+      window.location.href = "/login";
+    });
+
+    start();
+  </script>
+</body>
+</html>
